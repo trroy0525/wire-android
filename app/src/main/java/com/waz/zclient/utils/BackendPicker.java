@@ -27,7 +27,6 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import com.waz.service.BackendConfig;
-import com.waz.service.ZMessaging;
 import com.waz.zclient.BuildConfig;
 import timber.log.Timber;
 
@@ -47,32 +46,30 @@ public class BackendPicker {
         this.context = context;
     }
 
-    public void withBackend(Activity activity, final Callback<Void> callback) {
+    public void withBackend(Activity activity, final Callback<BackendConfig> callback) {
         if (shouldShowBackendPicker()) {
             showDialog(activity, callback);
         } else {
-            callback.callback(null);
+            callback.callback(BackendConfig.ProdBackend());
         }
     }
 
-    public void withBackend(final Callback<Void> callback) {
+    public void withBackend(final Callback<BackendConfig> callback) {
         BackendConfig be = getBackendConfig();
         if (be != null) {
-            ZMessaging.useBackend(be);
-            callback.callback(null);
+            callback.callback(be);
         }
     }
 
-    private void showDialog(Activity activity, final Callback<Void> callback) {
+    private void showDialog(Activity activity, final Callback<BackendConfig> callback) {
         AlertDialog.Builder builder = new AlertDialog.Builder(activity);
         builder.setTitle("Select Backend");
         builder.setItems(backends, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 BackendConfig be = BackendConfig.byName().apply(backends[which]);
-                ZMessaging.useBackend(be);
                 saveBackendConfig(be);
-                callback.callback(null);
+                callback.callback(be);
             }
         });
         builder.setCancelable(false);

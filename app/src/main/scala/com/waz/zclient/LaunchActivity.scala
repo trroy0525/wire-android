@@ -19,7 +19,7 @@ package com.waz.zclient
 
 import android.content.Intent
 import com.waz.ZLog.ImplicitTag._
-import com.waz.service.AccountsService
+import com.waz.service.{AccountsService, BackendConfig}
 import com.waz.threading.Threading
 import com.waz.zclient.appentry.AppEntryActivity
 import com.waz.zclient.utils.{BackendPicker, Callback}
@@ -29,8 +29,9 @@ class LaunchActivity extends BaseActivity {
   override def getBaseTheme = R.style.Theme_Dark
 
   override def onBaseActivityStart() = {
-    new BackendPicker(getApplicationContext).withBackend(this, new Callback[Void]() {
-      override def callback(aVoid: Void) = {
+    new BackendPicker(getApplicationContext).withBackend(this, new Callback[BackendConfig]() {
+      override def callback(be: BackendConfig) = {
+        getApplication.asInstanceOf[WireApplication].ensureInitialized(be)
         superOnBaseActivityStart()
 
         //TODO - could this be racing with setting the active account?

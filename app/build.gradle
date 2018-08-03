@@ -22,7 +22,7 @@ ext {
     audioVersion = System.getenv("AUDIO_VERSION") ?: '1.209.0@aar'
     stethoVersion = '1.5.0'
 
-    zMessagingDevVersionBase = '127.2110'
+    zMessagingDevVersionBase = '127-SNAPSHOT'
     zMessagingDevVersion = "${zMessagingDevVersionBase}@aar"
     // Release version number must be like this X.0(.Y)
     zMessagingReleaseVersion = System.getenv("ZMESSAGING_VERSION") ?: '127.3.479@aar'
@@ -304,6 +304,7 @@ dependencies {
     implementation "com.google.firebase:firebase-messaging:17.1.0"
 
     //third party libraries
+    implementation 'com.evernote:android-job:1.2.0'
     implementation 'com.jakewharton.timber:timber:4.7.0'
     implementation 'net.hockeyapp.android:HockeySDK:4.1.4'
     implementation 'com.jakewharton.threetenabp:threetenabp:1.0.3'

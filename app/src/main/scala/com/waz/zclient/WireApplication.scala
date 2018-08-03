@@ -30,6 +30,7 @@ import android.renderscript.RenderScript
 import android.support.multidex.MultiDexApplication
 import android.support.v4.app.{FragmentActivity, FragmentManager}
 import com.google.android.gms.security.ProviderInstaller
+import com.evernote.android.job.{JobCreator, JobManager}
 import com.waz.ZLog.ImplicitTag._
 import com.waz.ZLog.verbose
 import com.waz.api.NetworkMode
@@ -44,6 +45,8 @@ import com.waz.service.images.ImageLoader
 import com.waz.service.messages.MessagesService
 import com.waz.service.push.GlobalNotificationsService
 import com.waz.service.tracking.TrackingService
+import com.waz.services.fcm.FetchJob
+import com.waz.services.gps.GoogleApiImpl
 import com.waz.utils.events.{EventContext, Signal}
 import com.waz.zclient.appentry.controllers.{CreateTeamController, InvitationsController}
 import com.waz.zclient.calling.controllers.{CallController, CallStartController}
@@ -309,15 +312,25 @@ class WireApplication extends MultiDexApplication with WireContext with Injectab
     verbose("onCreate")
     controllerFactory = new ControllerFactory(getApplicationContext)
 
-    new BackendPicker(this).withBackend(new Callback[Void]() {
-      def callback(aVoid: Void) = ensureInitialized()
+    new BackendPicker(this).withBackend(new Callback[BackendConfig]() {
+      def callback(be: BackendConfig) = ensureInitialized(be)
     })
 
     Constants.loadFromContext(getApplicationContext)
   }
 
-  def ensureInitialized() = {
-    ZMessaging.onCreate(this)
+  def ensureInitialized(backend: BackendConfig) = {
+
+    JobManager.create(this).addJobCreator(new JobCreator {
+      override def create(tag: String) =
+        if (tag.contains(FetchJob.Tag)) new FetchJob
+        else null
+    })
+
+    val prefs = GlobalPreferences(this)
+    val googleApi = new GoogleApiImpl(this, backend, prefs)
+
+    ZMessaging.onCreate(this, backend, prefs, googleApi)
 
     inject[NotificationManagerWrapper]
     inject[ImageNotificationsController]
