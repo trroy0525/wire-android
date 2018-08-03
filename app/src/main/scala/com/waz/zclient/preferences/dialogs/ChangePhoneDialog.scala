@@ -28,9 +28,9 @@ import android.os.Build.VERSION_CODES._
 import android.os.{Build, Bundle}
 import android.support.annotation.NonNull
 import android.support.v4.app.DialogFragment
-import android.support.v4.graphics.drawable.DrawableWrapper
 import android.support.v4.view.animation.{FastOutLinearInInterpolator, LinearOutSlowInInterpolator}
 import android.support.v4.view.{ViewCompat, ViewPropertyAnimatorListenerAdapter}
+import android.support.v7.graphics.drawable.DrawableWrapper
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.AppCompatDrawableManager.getPorterDuffColorFilter
 import android.support.v7.widget.DrawableUtils.canSafelyMutateDrawable

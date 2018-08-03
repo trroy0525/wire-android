@@ -11,6 +11,34 @@ repositories {
     }
 }
 
+ext {
+    majorVersion = "3.15."
+
+    scalaMajorVersion = '2.11'
+    scalaVersion = scalaMajorVersion + '.12'
+
+    supportLibVersion = '27.1.1'
+    playServicesVersion = '15.0.1'
+    audioVersion = System.getenv("AUDIO_VERSION") ?: '1.209.0@aar'
+    stethoVersion = '1.5.0'
+
+    zMessagingDevVersionBase = '127.2110'
+    zMessagingDevVersion = "${zMessagingDevVersionBase}@aar"
+    // Release version number must be like this X.0(.Y)
+    zMessagingReleaseVersion = System.getenv("ZMESSAGING_VERSION") ?: '127.3.479@aar'
+
+    avsVersion = '4.4.147@aar'
+    avsInternalVersion = avsVersion //leave this here in case we want to test specific AVS versions on internal
+    avsName = 'avs'
+    avsGroup = 'com.wire'
+
+    // proprietary avs artifact configuration
+    customAvsVersion = '4.5.9@aar'
+    customAvsInternalVersion = customAvsVersion
+    customAvsName = 'avs'
+    customAvsGroup = 'com.wearezeta.avs'
+}
+
 android {
     //Trigger the licenseFormat task at least once in any compile phase
     applicationVariants.all { variant ->
@@ -24,7 +52,7 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode System.getenv("BUILD_NUMBER") as Integer ?: 99999
-        versionName rootProject.ext.majorVersion + android.defaultConfig.versionCode
+        versionName majorVersion + android.defaultConfig.versionCode
         applicationId "com.waz.zclient"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
@@ -57,6 +85,7 @@ android {
             }
         }
     }
+
     compileOptions {
         compileSdkVersion rootProject.ext.compileSdkVersion
         buildToolsVersion rootProject.ext.buildToolsVersion
@@ -224,73 +253,18 @@ dexinfo {
 }
 
 dependencies {
+
     implementation project(':lintlib')
     //    implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation deps.scala
-    compileOnly deps.scalaReflect
-    implementation deps.kotlin
-    implementation deps.multidex
-    implementation deps.timber
-    implementation deps.supportv4
-    implementation deps.supportv13
-    implementation deps.supportdesign
-    implementation deps.appcompatv7
-    implementation deps.supportannotations
-    implementation deps.recyclerview
-    implementation deps.threetenabp
-    implementation deps.hockey
-    implementation deps.audioNotifications
-    implementation deps.mixpanel
-    implementation deps.rebound
-    implementation deps.preferences
-    implementation deps.commonmark
-    implementation(deps.supportpreferences) {
-        exclude group: 'com.android.support', module: 'appcompat-v7'
-    }
-    implementation deps.gridlayout
-    //noinspection GradleDynamicVersion
-    implementation deps.psBase
-    implementation deps.fcm
-    implementation deps.psMaps
-    implementation deps.psLocation
-    implementation deps.cardview
-    //Be careful not to include in production!!
-    devImplementation deps.stetho
-    experimentalImplementation deps.stetho
-    qaImplementation deps.stetho
-    internalImplementation deps.stetho
-    // Test dependencies
-    testImplementation deps.junit
-    testImplementation(deps.testutils) {
-        exclude module: 'aspectjrt'
-        exclude module: 'isoparser'
-        exclude module: 'zmessaging-android'
-    }
-    testImplementation(deps.scalatest) {
-        exclude module: 'scala-library'
-    }
-    testImplementation deps.espressoIntents
-    testImplementation deps.hamcrestCore
-    testImplementation deps.hamcrestLib
-    testImplementation deps.hamcrestIntegration
-    testImplementation deps.mockitoCore
-    testImplementation deps.espresso
-    testImplementation deps.supportannotations
-    //AndroidTest dependencies
-    androidTestImplementation fileTree(include: ['*.jar'], dir: 'libs')
-    androidTestImplementation deps.junit
-    androidTestImplementation deps.espressoIntents
-    androidTestImplementation deps.testRunner
-    androidTestImplementation deps.testRules
-    androidTestImplementation deps.espresso
-    androidTestImplementation deps.supportannotations
-    androidTestImplementation deps.mockitoCore
-    androidTestImplementation deps.dexmaker
-    androidTestImplementation deps.dexmakerDx
-    androidTestImplementation deps.dexmakerMockito
-    //Translations
-    implementation deps.translations
-    implementation deps.jna
+
+    implementation "org.scala-lang:scala-library:$scalaVersion"
+    compileOnly "org.scala-lang:scala-reflect:$scalaVersion"
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlinVersion"
+
+    //wire libraries:
+    implementation "com.wire:audio-notifications:$audioVersion"
+    implementation 'com.wire:wiretranslations:1.+'
     // TODO  Nasty hack to be able to build add only one wire-core flavor to the build
     // TODO  (I know, it sucks, will think of a better way to do this, and we need this
     // TODO   when there are different SE APIs in dev vs internal/prod)
@@ -309,6 +283,51 @@ dependencies {
     implementation("com.wire:zmessaging-android:${internal ? zMessagingDevVersion : zMessagingReleaseVersion}") {
         transitive = true
     }
+
+    //support libraries
+    implementation 'com.android.support:multidex:1.0.3'
+    implementation "com.android.support:support-v4:$supportLibVersion"
+    implementation "com.android.support:support-v13:$supportLibVersion"
+    implementation "com.android.support:design:$supportLibVersion"
+    implementation "com.android.support:appcompat-v7:$supportLibVersion"
+    implementation "com.android.support:recyclerview-v7:$supportLibVersion"
+    implementation "com.android.support:preference-v7:$supportLibVersion"
+    implementation "com.android.support:cardview-v7:$supportLibVersion"
+    implementation "com.android.support:gridlayout-v7:$supportLibVersion"
+    implementation "com.android.support:support-annotations:$supportLibVersion"
+    implementation "com.android.support:cardview-v7:$supportLibVersion"
+
+    // Play services
+    implementation "com.google.android.gms:play-services-base:$playServicesVersion"
+    implementation "com.google.android.gms:play-services-maps:$playServicesVersion"
+    implementation "com.google.android.gms:play-services-location:$playServicesVersion"
+    implementation "com.google.firebase:firebase-messaging:17.1.0"
+
+    //third party libraries
+    implementation 'com.jakewharton.timber:timber:4.7.0'
+    implementation 'net.hockeyapp.android:HockeySDK:4.1.4'
+    implementation 'com.jakewharton.threetenabp:threetenabp:1.0.3'
+    implementation 'com.mixpanel.android:mixpanel-android:5.2.4'
+    implementation 'com.facebook.rebound:rebound:0.3.8'
+    implementation 'com.atlassian.commonmark:commonmark:0.11.0'
+    implementation 'net.java.dev.jna:jna:4.4.0@aar'
+
+    qaImplementation "com.facebook.stetho:stetho:$stethoVersion"
+    devImplementation "com.facebook.stetho:stetho:$stethoVersion"
+    experimentalImplementation "com.facebook.stetho:stetho:$stethoVersion"
+    internalImplementation "com.facebook.stetho:stetho:$stethoVersion"
+
+    // Test dependencies
+    testImplementation 'junit:junit:4.12'
+    testImplementation("com.wire:testutils:$zMessagingDevVersionBase") {
+        exclude module: 'aspectjrt'
+        exclude module: 'isoparser'
+        exclude module: 'zmessaging-android'
+    }
+    testImplementation("org.scalatest:scalatest_$scalaMajorVersion:2.2.6") {
+        exclude module: 'scala-library'
+    }
+
     ScalaCompileOptions.metaClass.daemonServer = true
     ScalaCompileOptions.metaClass.fork = true
     ScalaCompileOptions.metaClass.useAnt = false
@@ -356,7 +375,7 @@ android.applicationVariants.all { variant ->
 
     variant.outputs.each { output ->
         def newApkName
-        newApkName = "${appName}-${output.baseName}-${rootProject.ext.majorVersion}${android.defaultConfig.versionCode}.apk"
+        newApkName = "${appName}-${output.baseName}-${majorVersion}${android.defaultConfig.versionCode}.apk"
 
         output.outputFileName = new File("../..", newApkName)
     }
