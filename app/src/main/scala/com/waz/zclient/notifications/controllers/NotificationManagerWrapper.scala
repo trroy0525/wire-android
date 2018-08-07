@@ -17,7 +17,7 @@
  */
 package com.waz.zclient.notifications.controllers
 
-import android.app.{Notification, NotificationManager}
+import android.app.{Notification, NotificationChannel, NotificationManager}
 import android.content.Context
 import android.graphics.{Color, Typeface}
 import android.net.Uri
@@ -189,8 +189,8 @@ case class NotificationProps(when:                     Option[Long] = None,
       "action2"                  -> action2
     )
 
-  def build(implicit cxt: Context): Notification = {
-    val builder = new NotificationCompat.Builder(cxt, null)
+  def build(channelId: String)(implicit cxt: Context): Notification = {
+    val builder = new NotificationCompat.Builder(cxt, channelId)
 
     when.foreach(builder.setWhen)
     showWhen.foreach(builder.setShowWhen)
@@ -256,15 +256,29 @@ trait NotificationManagerWrapper {
 }
 
 object NotificationManagerWrapper {
-  class AndroidNotificationsManager(notificationManager: NotificationManager)
-                                   (implicit inj: Injector, cxt: Context, eventContext: EventContext)
-    extends NotificationManagerWrapper with Injectable {
+
+  val ChannelId = "DEFAULT_CHANNEL_ID"
+
+  class AndroidNotificationsManager(notificationManager: NotificationManager)(implicit inj: Injector, cxt: Context, eventContext: EventContext) extends NotificationManagerWrapper with Injectable {
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      notificationManager.createNotificationChannel(
+        returning(new NotificationChannel(ChannelId, getString(R.string.default_channel_name), NotificationManager.IMPORTANCE_MAX)) {
+          _.setDescription(getString(R.string.default_channel_description))
+        })
+    }
 
     private val controller = inject[MessageNotificationsController]
 
-    controller.notificationsToCancel.onUi(cancel)
+    controller.notificationsToCancel.onUi { ids =>
+      verbose(s"cancel: $ids")
+      ids.foreach(notificationManager.cancel)
+    }
 
-    controller.notificationToBuild.onUi { case (id, props) => build(id, props) }
+    controller.notificationToBuild.onUi { case (id, props) =>
+      verbose(s"build: $id")
+      notificationManager.notify(id, props.build(ChannelId))
+    }
 
     override def getActiveNotificationIds: Seq[Int] =
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
@@ -273,16 +287,6 @@ object NotificationManagerWrapper {
         warn(s"Tried to access method getActiveNotifications from api level: ${Build.VERSION.SDK_INT}")
         Seq.empty
       }
-
-    def cancel(notificationIds: Set[Int]): Unit = {
-      verbose(s"cancel: $notificationIds")
-      notificationIds.foreach(notificationManager.cancel)
-    }
-
-    def build(id: Int, props: NotificationProps): Unit = {
-      verbose(s"build: $id")
-      notificationManager.notify(id, props.build)
-    }
   }
 }
 

@@ -734,6 +734,10 @@
     </plurals>
 
     <!-- Lockscreen and notifications -->
+
+    <string name="default_channel_name">Default Notification Channel</string>
+    <string name="default_channel_description">All notifications in Wire are currently handled using this channel.</string>
+
     <string name="lockscreen__talk">IS CALLING</string>
     <plurals name="notification__new_messages">
         <item quantity="one">Message from %2$s</item>

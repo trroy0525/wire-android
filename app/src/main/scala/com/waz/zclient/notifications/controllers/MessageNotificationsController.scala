@@ -433,6 +433,7 @@ class MessageNotificationsController(bundleEnabled: Boolean = Build.VERSION.SDK_
 }
 
 object MessageNotificationsController {
+
   def toNotificationGroupId(userId: UserId): Int = userId.str.hashCode()
   def toEphemeralNotificationGroupId(userId: UserId): Int = toNotificationGroupId(userId) + 1
   def toNotificationConvId(userId: UserId, convId: ConvId): Int = (userId.str + convId.str).hashCode()
