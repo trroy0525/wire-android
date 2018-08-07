@@ -45,8 +45,8 @@ android {
         variant.javaCompiler.dependsOn(rootProject.licenseFormat)
     }
 
-    compileSdkVersion rootProject.ext.compileSdkVersion
-    buildToolsVersion rootProject.ext.buildToolsVersion
+    compileSdkVersion 27
+    buildToolsVersion '27.0.3'
 
     defaultConfig {
         minSdkVersion rootProject.ext.minSdkVersion
@@ -253,20 +253,21 @@ dexinfo {
 }
 
 dependencies {
-
     implementation project(':lintlib')
-    //    implementation fileTree(dir: 'libs', include: ['*.jar'])
 
+    //    implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.scala-lang:scala-library:$scalaVersion"
     compileOnly "org.scala-lang:scala-reflect:$scalaVersion"
-
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlinVersion"
 
     //wire libraries:
     implementation "com.wire:audio-notifications:$audioVersion"
     implementation 'com.wire:wiretranslations:1.+'
+
     // TODO  Nasty hack to be able to build add only one wire-core flavor to the build
+
     // TODO  (I know, it sucks, will think of a better way to do this, and we need this
+
     // TODO   when there are different SE APIs in dev vs internal/prod)
     boolean internal = true
     for (String taskName : gradle.startParameter.taskNames) {
@@ -275,9 +276,13 @@ dependencies {
             break;
         }
     }
+
     // For using local files in app/libs
+
     //implementation (name:'avs', ext:'aar')
+
     //implementation (name:'audio-notifications', ext:'aar')
+
     //implementation (name:'zmessaging-android', ext:'aar')
     implementation "$avsGroup:$avsName:${internal ? avsInternalVersion : avsVersion}"
     implementation("com.wire:zmessaging-android:${internal ? zMessagingDevVersion : zMessagingReleaseVersion}") {
@@ -301,7 +306,7 @@ dependencies {
     implementation "com.google.android.gms:play-services-base:$playServicesVersion"
     implementation "com.google.android.gms:play-services-maps:$playServicesVersion"
     implementation "com.google.android.gms:play-services-location:$playServicesVersion"
-    implementation "com.google.firebase:firebase-messaging:17.1.0"
+    implementation 'com.google.firebase:firebase-messaging:17.1.0'
 
     //third party libraries
     implementation 'com.evernote:android-job:1.2.0'
@@ -312,7 +317,6 @@ dependencies {
     implementation 'com.facebook.rebound:rebound:0.3.8'
     implementation 'com.atlassian.commonmark:commonmark:0.11.0'
     implementation 'net.java.dev.jna:jna:4.4.0@aar'
-
     qaImplementation "com.facebook.stetho:stetho:$stethoVersion"
     devImplementation "com.facebook.stetho:stetho:$stethoVersion"
     experimentalImplementation "com.facebook.stetho:stetho:$stethoVersion"
@@ -328,7 +332,6 @@ dependencies {
     testImplementation("org.scalatest:scalatest_$scalaMajorVersion:2.2.6") {
         exclude module: 'scala-library'
     }
-
     ScalaCompileOptions.metaClass.daemonServer = true
     ScalaCompileOptions.metaClass.fork = true
     ScalaCompileOptions.metaClass.useAnt = false
