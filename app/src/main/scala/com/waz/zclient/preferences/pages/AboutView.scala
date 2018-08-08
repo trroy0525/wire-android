@@ -22,15 +22,17 @@ import android.content.{Context, Intent}
 import android.net.Uri
 import android.os.Bundle
 import android.util.AttributeSet
-import com.waz.ZLog.ImplicitTag._
 import android.view.View
-import android.widget.{LinearLayout, Toast}
-import com.waz.zclient.preferences.views.TextButton
-import com.waz.zclient.utils.{BackStackKey, DebugUtils}
-import com.waz.zclient.{R, ViewHelper}
-import AboutView._
-import com.waz.service.ZMessaging
+import android.widget.LinearLayout
+import com.waz.ZLog.ImplicitTag._
+import com.waz.api.ZmsVersion
+import com.waz.service.{MetaDataService, ZMessaging}
 import com.waz.utils.events.Signal
+import com.waz.zclient.preferences.pages.AboutView._
+import com.waz.zclient.preferences.views.TextButton
+import com.waz.zclient.utils.BackStackKey
+import com.waz.zclient.utils.ContextUtils._
+import com.waz.zclient.{R, ViewHelper}
 
 class AboutView(context: Context, attrs: AttributeSet, style: Int) extends LinearLayout(context, attrs, style) with ViewHelper {
   def this(context: Context, attrs: AttributeSet) = this(context, attrs, 0)
@@ -59,15 +61,26 @@ class AboutView(context: Context, attrs: AttributeSet, style: Int) extends Linea
     versionClickCounter += 1
     if (versionClickCounter >= A_BUNCH_OF_CLICKS_TO_PREVENT_ACCIDENTAL_TRIGGERING) {
       versionClickCounter = 0
-      Toast.makeText(context, DebugUtils.getVersion(getContext), Toast.LENGTH_LONG).show()
+      showToast(getVersion)
     }
   }
 
-  private def openUrl(id: Int): Unit ={
-    context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(context.getString(id))))
-  }
+  private def openUrl(id: Int): Unit =
+    context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(getString(id))))
 
-  def setVersion(version: String) = versionTextButton.setTitle(context.getString(R.string.pref_about_version_title, version))
+  def setVersion(version: String) = versionTextButton.setTitle(getString(R.string.pref_about_version_title, version))
+
+  def getVersion(implicit context: Context): String = {
+    val md = inject[MetaDataService]
+    s"""
+      |Version:             ${md.versionName} (${md.appVersion}
+      |Sync Engine:         ${ZmsVersion.ZMS_VERSION}
+      |AVS:                 ${getString(R.string.avs_version)}
+      |Audio-notifications: ${getString(R.string.audio_notifications_version)}
+      |Translations:        ${getString(R.string.wiretranslations_version)}
+      |Locale:              $getLocale
+    """.stripMargin
+  }
 }
 
 object AboutView {

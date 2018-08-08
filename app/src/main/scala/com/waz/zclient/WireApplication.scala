@@ -129,6 +129,7 @@ object WireApplication {
     bind [UiLifeCycle]                    to inject[GlobalModule].lifecycle
     bind [TrackingService]                to inject[GlobalModule].trackingService
     bind [PermissionsService]             to inject[GlobalModule].permissions
+    bind [MetaDataService]                to inject[GlobalModule].metadata
 
     import com.waz.threading.Threading.Implicits.Background
     bind [AccountToImageLoader]   to (userId => inject[AccountsService].getZms(userId).map(_.map(_.imageLoader)))
