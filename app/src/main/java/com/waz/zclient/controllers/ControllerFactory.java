@@ -32,8 +32,6 @@ import com.waz.zclient.controllers.location.ILocationController;
 import com.waz.zclient.controllers.location.LocationController;
 import com.waz.zclient.controllers.navigation.INavigationController;
 import com.waz.zclient.controllers.navigation.NavigationController;
-import com.waz.zclient.controllers.orientation.IOrientationController;
-import com.waz.zclient.controllers.orientation.OrientationController;
 import com.waz.zclient.controllers.singleimage.ISingleImageController;
 import com.waz.zclient.controllers.singleimage.SingleImageController;
 import com.waz.zclient.controllers.userpreferences.IUserPreferencesController;
@@ -60,8 +58,6 @@ public class ControllerFactory implements IControllerFactory {
   protected ILocationController locationController;
 
   protected INavigationController navigationController;
-
-  protected IOrientationController orientationController;
 
   protected ISingleImageController singleImageController;
 
@@ -120,10 +116,6 @@ public class ControllerFactory implements IControllerFactory {
       navigationController.tearDown();
       navigationController = null;
     }
-    if (orientationController != null) {
-      orientationController.tearDown();
-      orientationController = null;
-    }
     if (singleImageController != null) {
       singleImageController.tearDown();
       singleImageController = null;
@@ -154,15 +146,6 @@ public class ControllerFactory implements IControllerFactory {
   @Override
   public void setGlobalLayout(View globalLayoutView) {
     getGlobalLayoutController().setGlobalLayout(globalLayoutView);
-  }
-
-  @Override
-  public IOrientationController getOrientationController() {
-    verifyLifecycle();
-    if (orientationController == null) {
-      orientationController = new OrientationController(this.context);
-    }
-    return orientationController;
   }
 
   @Override

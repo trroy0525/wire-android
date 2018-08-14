@@ -30,11 +30,10 @@ import android.view.animation.Animation
 import android.widget.{AbsListView, FrameLayout, TextView}
 import com.waz.ZLog.ImplicitTag._
 import com.waz.ZLog._
-import com.waz.model.AccentColor
 import com.waz.api.{AssetFactory, AudioAssetForUpload, AudioEffect, ErrorType}
 import com.waz.content.GlobalPreferences
 import com.waz.model.ConversationData.ConversationType
-import com.waz.model.{MessageContent => _, _}
+import com.waz.model.{AccentColor, MessageContent => _, _}
 import com.waz.permissions.PermissionsService
 import com.waz.service.ZMessaging
 import com.waz.service.assets.AssetService.RawAssetInput
@@ -54,7 +53,6 @@ import com.waz.zclient.controllers.confirmation.{ConfirmationCallback, Confirmat
 import com.waz.zclient.controllers.drawing.IDrawingController
 import com.waz.zclient.controllers.globallayout.{IGlobalLayoutController, KeyboardVisibilityObserver}
 import com.waz.zclient.controllers.navigation.{INavigationController, NavigationControllerObserver, Page, PagerControllerObserver}
-import com.waz.zclient.controllers.orientation.{IOrientationController, OrientationControllerObserver}
 import com.waz.zclient.controllers.singleimage.{ISingleImageController, SingleImageObserver}
 import com.waz.zclient.controllers.userpreferences.IUserPreferencesController
 import com.waz.zclient.conversation.ConversationController
@@ -78,7 +76,7 @@ import com.waz.zclient.ui.animation.interpolators.penner.Expo
 import com.waz.zclient.ui.cursor.CursorMenuItem
 import com.waz.zclient.ui.text.TypefaceTextView
 import com.waz.zclient.utils.ContextUtils._
-import com.waz.zclient.utils.{RichView, SquareOrientation, ViewUtils}
+import com.waz.zclient.utils.{RichView, ViewUtils}
 import com.waz.zclient.views.e2ee.ShieldView
 import com.waz.zclient.{ErrorsController, FragmentHelper, R}
 
@@ -106,7 +104,6 @@ class ConversationFragment extends FragmentHelper {
 
   //TODO remove use of old java controllers
   private lazy val globalLayoutController     = inject[IGlobalLayoutController]
-  private lazy val orientationController      = inject[IOrientationController]
   private lazy val navigationController       = inject[INavigationController]
   private lazy val singleImageController      = inject[ISingleImageController]
   private lazy val slidingPaneController      = inject[ISlidingPaneController]
@@ -350,7 +347,6 @@ class ConversationFragment extends FragmentHelper {
     extendedCursorContainer.foreach(globalLayoutController.addKeyboardHeightObserver)
     extendedCursorContainer.foreach(globalLayoutController.addKeyboardVisibilityObserver)
     extendedCursorContainer.foreach(_.setCallback(extendedCursorContainerCallback))
-    orientationController.addOrientationControllerObserver(orientationControllerObserver)
     navigationController.addNavigationControllerObserver(navigationControllerObserver)
     navigationController.addPagerControllerObserver(pagerControllerObserver)
     singleImageController.addSingleImageObserver(singleImageObserver)
@@ -386,7 +382,6 @@ class ConversationFragment extends FragmentHelper {
 
     extendedCursorContainer.foreach(globalLayoutController.removeKeyboardHeightObserver)
     extendedCursorContainer.foreach(globalLayoutController.removeKeyboardVisibilityObserver)
-    orientationController.removeOrientationControllerObserver(orientationControllerObserver)
     singleImageController.removeSingleImageObserver(singleImageObserver)
     globalLayoutController.removeKeyboardVisibilityObserver(keyboardVisibilityObserver)
     slidingPaneController.removeObserver(slidingPaneObserver)
@@ -566,24 +561,6 @@ class ConversationFragment extends FragmentHelper {
       case false => //
     }(Threading.Ui)
   } yield {}
-
-  private lazy val inLandscape = Signal(Option.empty[Boolean])
-
-  private val orientationControllerObserver = new  OrientationControllerObserver {
-    override def onOrientationHasChanged(squareOrientation: SquareOrientation): Unit = inLandscape.head.foreach { oldInLandscape =>
-      val newInLandscape = isInLandscape
-      oldInLandscape match {
-        case Some(landscape) if landscape != newInLandscape =>
-          val conversationListVisible = navigationController.getCurrentPage == Page.CONVERSATION_LIST
-          if (newInLandscape && !conversationListVisible)
-            CancellableFuture.delayed(getInt(R.integer.framework_animation_duration_short).millis){
-              Option(getActivity).foreach(_.onBackPressed())
-            }
-        case _ =>
-      }
-      inLandscape ! Some(newInLandscape)
-    }
-  }
 
   private val cursorCallback = new CursorCallback {
     override def onMotionEventFromCursorButton(cursorMenuItem: CursorMenuItem, motionEvent: MotionEvent): Unit =

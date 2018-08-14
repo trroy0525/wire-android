@@ -343,8 +343,6 @@ class MainActivity extends BaseActivity
     //Ensure tracking is started
     inject[UiTrackingController]
     inject[KeyboardController]
-    // Make sure we have a running OrientationController instance
-    getControllerFactory.getOrientationController
     // Here comes code for adding other dependencies to controllers...
     getControllerFactory.getNavigationController.setIsLandscape(isInLandscape(this))
   }

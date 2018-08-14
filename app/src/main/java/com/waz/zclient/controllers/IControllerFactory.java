@@ -25,7 +25,6 @@ import com.waz.zclient.controllers.deviceuser.IDeviceUserController;
 import com.waz.zclient.controllers.globallayout.IGlobalLayoutController;
 import com.waz.zclient.controllers.location.ILocationController;
 import com.waz.zclient.controllers.navigation.INavigationController;
-import com.waz.zclient.controllers.orientation.IOrientationController;
 import com.waz.zclient.controllers.singleimage.ISingleImageController;
 import com.waz.zclient.controllers.userpreferences.IUserPreferencesController;
 import com.waz.zclient.controllers.verification.IVerificationController;
@@ -39,8 +38,6 @@ public interface IControllerFactory {
   IConfirmationController getConfirmationController();
 
   INavigationController getNavigationController();
-
-  IOrientationController getOrientationController();
 
   IPickUserController getPickUserController();
 

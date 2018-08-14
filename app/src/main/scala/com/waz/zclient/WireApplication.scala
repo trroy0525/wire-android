@@ -59,7 +59,6 @@ import com.waz.zclient.controllers.deviceuser.IDeviceUserController
 import com.waz.zclient.controllers.globallayout.IGlobalLayoutController
 import com.waz.zclient.controllers.location.ILocationController
 import com.waz.zclient.controllers.navigation.INavigationController
-import com.waz.zclient.controllers.orientation.IOrientationController
 import com.waz.zclient.controllers.singleimage.ISingleImageController
 import com.waz.zclient.controllers.userpreferences.IUserPreferencesController
 import com.waz.zclient.conversation.ConversationController
@@ -165,7 +164,6 @@ object WireApplication {
     bind [ILocationController]           toProvider controllerFactory.getLocationController
     bind [ICameraController]             toProvider controllerFactory.getCameraController
     bind [IConfirmationController]       toProvider controllerFactory.getConfirmationController
-    bind [IOrientationController]        toProvider controllerFactory.getOrientationController
 
     // global controllers
     bind [CrashController]         to new CrashController
