@@ -27,15 +27,13 @@ import android.view.inputmethod.EditorInfo
 import android.widget.TextView.OnEditorActionListener
 import android.widget.{LinearLayout, TextView}
 import com.waz.ZLog.ImplicitTag._
-
-import com.waz.model.AccentColor
-import com.waz.model.{Availability, MessageExpiry}
+import com.waz.model.{AccentColor, Availability, MessageExpiry}
 import com.waz.threading.Threading
 import com.waz.utils.events.Signal
 import com.waz.utils.returning
 import com.waz.zclient.common.controllers.ThemeController
 import com.waz.zclient.controllers.globallayout.IGlobalLayoutController
-import com.waz.zclient.cursor.CursorController.KeyboardState
+import com.waz.zclient.cursor.CursorController.{EnteredTextSource, KeyboardState}
 import com.waz.zclient.messages.MessagesController
 import com.waz.zclient.pages.extendedcursor.ExtendedCursorContainer
 import com.waz.zclient.ui.cursor._
@@ -117,8 +115,6 @@ class CursorView(val context: Context, val attrs: AttributeSet, val defStyleAttr
   dividerColor.onUi(dividerView.setBackgroundColor)
   bgColor.onUi(setBackgroundColor)
 
-
-
   emojiButton.menuItem ! Some(CursorMenuItem.Emoji)
   keyboardButton.menuItem ! Some(CursorMenuItem.Keyboard)
 
@@ -142,18 +138,17 @@ class CursorView(val context: Context, val attrs: AttributeSet, val defStyleAttr
 
   cursorEditText.addTextChangedListener(new TextWatcher() {
     private var text = ""
+    override def beforeTextChanged(charSequence: CharSequence, start: Int, count: Int, after: Int): Unit = ()
 
     override def onTextChanged(charSequence: CharSequence, start: Int, before: Int, count: Int): Unit = {
       text = charSequence.toString
     }
 
     override def afterTextChanged(editable: Editable): Unit = {
-      controller.enteredText ! text
+      controller.enteredText ! (text, EnteredTextSource.FromView)
       if (text.trim.nonEmpty) lineCount ! cursorEditText.getLineCount
       text = ""
     }
-
-    override def beforeTextChanged(charSequence: CharSequence, start: Int, count: Int, after: Int): Unit = ()
   })
 
   cursorEditText.setOnClickListener(new OnClickListener {
@@ -172,9 +167,11 @@ class CursorView(val context: Context, val attrs: AttributeSet, val defStyleAttr
         false
     }
   })
+
   cursorEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
     override def onFocusChange(view: View, hasFocus: Boolean): Unit = controller.editHasFocus ! hasFocus
   })
+
   cursorEditText.setFocusableInTouchMode(true)
 
   controller.sendButtonEnabled.onUi { enabled =>
@@ -210,14 +207,15 @@ class CursorView(val context: Context, val attrs: AttributeSet, val defStyleAttr
     .orElse(Signal.const(defaultHintTextColor))
     .onUi(hintView.setTextColor)
 
-  //allows the controller to "empty" the text field if necessary by resetting the signal. In general, we should be careful
-  //about loops since the text field changes also update the signal
-  controller.enteredText.onUi { text =>
-    if (text == "" && text != cursorEditText.getText.toString) cursorEditText.setText(text)
+  // allows the controller to "empty" the text field if necessary by resetting the signal.
+  // specifying the source guards us from an infinite loop of the view and controller updating each other
+  controller.enteredText {
+    case (text, EnteredTextSource.FromController) if text != cursorEditText.getText.toString => cursorEditText.setText(text)
+    case _ =>
   }
 
   (controller.isEditingMessage.zip(controller.enteredText) map {
-    case (editing, text) => !editing && text.isEmpty
+    case (editing, (text, _)) => !editing && text.isEmpty
   }).onUi { hintView.setVisible }
 
   controller.convIsActive.onUi(this.setVisible)
@@ -251,9 +249,8 @@ class CursorView(val context: Context, val attrs: AttributeSet, val defStyleAttr
     cursorEditText.setSelection(text.length)
   }
 
-  def insertText(text: String): Unit = {
+  def insertText(text: String): Unit =
     cursorEditText.getText.insert(cursorEditText.getSelectionStart, text)
-  }
 
   def hasText: Boolean = !TextUtils.isEmpty(cursorEditText.getText.toString)
 

@@ -29,8 +29,13 @@ class DraftMap(implicit injector: Injector) extends Injectable {
   private val drafts = Signal(Map.empty[ConvId, String])
   private lazy val conversationController = inject[ConversationController]
 
-  def setCurrent(text: String)(implicit ec: ExecutionContext): Future[Unit] = conversationController.currentConvId.head.map { id => set(id, text) }
+  def setCurrent(text: String)(implicit ec: ExecutionContext): Future[Unit] =
+    conversationController.currentConvId.head.map { id => set(id, text) }
+
   def set(id: ConvId, text: String): Unit = drafts.mutate { _ + (id -> text) }
+
+  def resetCurrent()(implicit ec: ExecutionContext): Future[Unit] =
+    conversationController.currentConvId.head.map { id => drafts.mutate(_ - id) }
 
   def get(id: ConvId)(implicit ec: ExecutionContext): Future[String] = drafts.head.map { _.getOrElse(id, "") }
 
